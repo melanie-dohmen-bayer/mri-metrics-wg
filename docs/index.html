@@ -1,0 +1,270 @@
+<html>
+<header>
+
+<script src="cases.js"> </script>
+<script>
+
+
+
+function checkAnnotations(annotations){
+    var finished_cases = new Array();
+    
+    var annotation_lines = annotations.split("\n");
+
+    /* annotation format:
+    reader,distorsion,case, 0, 1, 2,comment
+    */
+
+    for (c=0;c<cases.length;c++){
+	var complete = true;
+	for (d=0;d<distorsions.length;d++){
+	    var found = false;
+    	    for (var l=0;l<annotation_lines.length;l++){
+        	var columns = annotation_lines[l].split(",");
+        	
+        	if (columns.length == 7 && columns[2] == cases[c] && columns[1] == distorsions[d]){
+            	    found = true;
+                }
+            }
+            if (!found) {
+                complete = false;  
+            }
+        }
+        if (complete) {
+            finished_cases.push(cases[c]);
+        }
+    }
+    
+    return finished_cases;
+}
+
+function activate_case_links(finished_cases){
+
+	console.log("finished_cases: ", finished_cases);
+	// add links and add checkmarks to annotated cases:
+        for(var c=0;c<cases.length;c++){
+           
+           if(finished_cases.indexOf(cases[c]) != -1){
+              document.getElementById("case_"+c.toString()).innerHTML = "<a href=annotate.html?case="+c.toString()+">"+cases[c] + " &#10004 </a>";
+	      console.log("case ", c, finished_cases);
+           }
+           // only add link
+           else{
+              document.getElementById("case_"+c.toString()).innerHTML = "<a href=annotate.html?case="+c.toString()+">"+cases[c] + " </a>";
+           }
+       }
+
+}
+
+
+function update_annotation_file(){
+
+
+    if (document.getElementById('annotation_file').files != []){
+
+        document.getElementById("annotation_file_info").innerHTML = ""
+        document.getElementById("reader_name_info").innerHTML = ""
+
+
+        textfile = document.getElementById('annotation_file').files[0];
+        let fileReader = new FileReader();
+
+        fileReader.addEventListener("loadend", () => {
+            var annotations = fileReader.result;
+	    console.log("file:"+annotations);
+            finished_cases = checkAnnotations(annotations);
+            reader_name = getReadername(annotations);
+            console.log("reader_name in annotation file: "+reader_name);
+            if (reader_name != null){
+                if (reader_name != document.getElementById("reader_name") | reader_name != localStorage.getItem("reader_name")){
+                
+                    // Change reader_name:
+                    document.getElementById("reader_name_info").innerHTML += "Reader was changed according to annotation file!<br>";
+                    localStorage.setItem("reader_name",reader_name);
+                    document.getElementById("reader_name").value = reader_name;
+                    
+                    // download annotations as file from local Storage in separate window
+                    if (localStorage.getItem("annotations") != null){
+                        document.getElementById("annotation_file_info").innerHTML += "Annotations of current session are downloaded in new tab!<br>";
+                    
+                        window.open("download.html");
+                    }
+                }
+            }
+
+            activate_case_links(finished_cases);
+
+            // update local Storage with annotations from file
+            if (finished_cases.length>0){
+                
+                document.getElementById("annotation_file_info").innerHTML += "Found "+finished_cases.length.toString() + " annotations in uploaded file!";
+                if (localStorage.getItem("annotations" != null)){
+
+                    // download annotations as file from local Storage in separate window
+                    if (localStorage.getItem("annotations") != null){
+
+                        session_annotations = localStorage.getItem("annotations");
+                        annotations = mergeAnnotations(session_annotations, annotations);
+                        document.getElementById("annotation_file_info").innerHTML += "Annotations of current session are merged with annotation file!<br>";
+                    
+                        window.open("download.html");
+                    }
+                }
+                else{
+                    localStorage.setItem("annotations", annotations);
+                }
+            
+            }
+            else{
+                document.getElementById("annotation_file_info").innerHTML += "Invalid/Empty annotation file!"
+            }
+        
+        });
+
+        fileReader.readAsText(textfile);
+        document.getElementById("reader_name").disabled = true;
+        
+    }
+    else{
+        document.getElementById("reader_name").disabled = false;
+    }
+
+}
+
+function update_reader_name(){
+    // remove whitespace from reader name:
+    reader_name = (document.getElementById("reader_name").value).replace(/\s+/g, '')
+    console.log(reader_name);
+    document.getElementById("reader_name").value = reader_name
+    
+    if (reader_name != ""){
+        
+        if (reader_name != localStorage.getItem("reader_name")){
+        
+            // Change reader_name:
+            document.getElementById("reader_name_info").innerHTML = "Reader was changed!";
+            document.getElementById("annotation_file_info").innerHTML = "New Session started!<br>";
+                
+            localStorage.setItem("reader_name", reader_name);
+            
+            // download annotations as file from local Storage in separate window and remove annotations after download
+            if (localStorage.getItem("annotations") != null){
+                document.getElementById("annotation_file_info").innerHTML += "Annotations of previous reader are downloaded in new tab!<br>";
+                localStorage.setItem("remove", "True");
+                window.open("download.html");
+            }
+	    activate_case_links(new Array());
+            
+        }
+
+    }
+    else{
+        document.getElementById("reader_name_info").innerHTML = "Cannot use empty name!";
+    }
+                    
+}
+
+
+function mergeAnnotations(newer_annotations, annotations){
+    var annotation_lines = annotations.split("\n");
+    var newer_annotation_lines = newer_annotations.split("\n");
+    var result_annotations = newer_annotations;
+    
+    /* annotation format:
+    reader, distorsion, case, 0, 1, 2,
+    */
+    
+    // loop through old annotations
+    for (var l=0;l<annotation_lines.length;l++){
+        columns = annotation_lines[l].split(",");
+        
+        dis_case = columns[0]+","+columns[1]+","+columns[2];
+        dis_case_annotation = ", "+columns[3]+","+columns[4]+","+columns[5]+",";
+        // search for same case + distorsion in newer annotations:
+        found = false;
+        for (var n=0;n<newer_annotation_lines.length;n++){
+            
+            newer_columns = newer_annotation_lines[n].split(",");
+            newer_dis_case = newer_columns[0]+","+newer_columns[1]+","+newer_columns[2];
+            
+            if (dis_case_annotation == newer_dis_case_annotation){
+                found = true;
+            }
+        }
+        //if not found in newer annotations add to result:
+        if (!found){
+            result_annotations += annotation_lines[l]+"\n";
+        }
+    }
+    
+    return result_annotations;
+}
+
+
+function getReadername(annotations){
+    
+    var annotation_lines = annotations.split("\n");
+
+    /* annotation format:
+    reader, case, distorsion, 0, 1, 2,
+    */
+    reader_name = null;
+    columns = annotation_lines[0].split(",");
+    reader_name = columns[0];
+     
+    return reader_name;
+}
+
+
+</script>
+</header>
+<body>
+
+<h1> Welcome to Medical Image Distortion Reader Study! </h1>
+<h2> 
+If this is the first time you are here, please have a look at the 
+<a href="introduction.html"> Introduction </a> </h2>
+
+<h2> If you have annotated before, please upload your annotation file here: </h2>
+<input type="file" id="annotation_file"><input id="b_annotation_file" type="button" value="Upload" onclick="update_annotation_file()"><br>
+<p id="annotation_file_info"></p>
+<h2> otherwise, please enter your name: </h2>
+<input type="text" id="reader_name"><input id="b_reader_name" type="button" value="Confirm Reader Name" onclick="update_reader_name()"><br>
+<p id="reader_name_info"> </p>
+
+
+<h1> Cases to be annotated: </h1>
+
+<script>
+var reader_name = localStorage.getItem("reader_name");
+if (reader_name != null){
+    document.getElementById("reader_name").value  = reader_name
+}
+
+if (document.getElementById("reader_name").value == "" & document.getElementById("annotation_file").value == ""){
+    document.getElementById("reader_name_info").innerHTML = "Please upload your annotation or ...!"
+    document.getElementById("annotation_file_info").innerHTML = "... enter your name!"
+}
+
+for(var c=0;c<cases.length;c++){
+    document.write("<p id='case_"+c.toString()+"'>"+cases[c]+"</p>");
+}
+
+
+
+annotations = localStorage.getItem("annotations");
+console.log(annotations);
+if ( annotations != null){
+    finished_cases = checkAnnotations(annotations);
+    activate_case_links(finished_cases);
+
+}
+
+</script>
+
+
+</body>
+
+
+
+</html>

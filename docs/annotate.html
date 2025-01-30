@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<script src="cases.js"></script>
+
+<script>
+  
+
+function GetURLParameter(sParam){
+  var sPageURL = window.location.search.substring(1);
+  var sURLVariables = sPageURL.split('&');
+  for (var i = 0; i < sURLVariables.length; i++){
+    var sParameterName = sURLVariables[i].split('=');
+    if (sParameterName[0] == sParam){
+      return sParameterName[1];
+    };
+  };
+  return "none";
+};
+
+function finished_case(){
+
+   // get current annotations:
+   var case_nr = parseInt(GetURLParameter("case"));
+   var annotation_list = new Array(distorsions.length);
+   var comment_list = new Array(distorsion.length);
+   
+   for (var d = 0; d < distorsions.length; d++){
+      annotation_list[d] = new Array();
+      // including "not perfect" selection with s=0
+      for (var s = 0; s <= strengths; s++){
+         if (document.getElementById("distorsion"+distorsions[d]+"strength"+s.toString()).checked) {
+            annotation_list[d].push(s);
+         }
+      };
+      comment_list[d] = document.getElementById("c_distorsion"+distorsions[d]).value
+   }
+
+   if (GetURLParameter("test") == "none"){
+
+      // add annotations to local Storage:
+      stored_annotations = localStorage.getItem("annotations");
+      console.log("test annotations for null: " + stored_annotations)
+      if (stored_annotations == null){
+         stored_annotations = "";
+      }
+      console.log("null annotations should become: ''" + stored_annotations)
+      reader_name = localStorage.getItem("reader_name");
+      for(var d=0;d<distorsions.length;d++){
+         distorsion = distorsions[d];
+         new_annotations = reader_name + "," + distorsion + "," + cases[case_nr] + "," +
+               annotation_list[d][0] + "," +  annotation_list[d][1] + "," +  annotation_list[d][2] + ","+comment_list[d]+"\n";
+         localStorage.setItem("annotations", stored_annotations + new_annotations);
+         stored_annotations = stored_annotations + new_annotations;
+      }
+      
+      // download annotations as file from local Storage in separate window
+      window.open("download.html");
+   
+      // Go to next case or index.html
+      if (case_nr + 1 < cases.length) {
+         
+         let newLink = document.createElement("a");
+         newLink.href="annotate.html?case="+(case_nr+1).toString();
+         newLink.click();
+
+      }
+   }
+   else{
+      // Go to next case or index.html
+      if (case_nr + 1 < test_cases.length) {
+         
+         let newLink = document.createElement("a");
+         newLink.href="annotate.html?test=T&case="+(case_nr+1).toString();
+         newLink.click();
+
+      }
+
+   }
+};
+
+
+function update(distorsion){
+
+ // check all checkboxes, that are checked
+ var annotation_list = new Array();
+ for (var s = 0; s <= strengths; s++){
+    if (document.getElementById("distorsion"+distorsion+"strength"+s.toString()).checked) {
+        annotation_list.push(s);
+    }
+
+ };
+
+ if (annotation_list.length >= 1){
+     // color dark green
+     for (var s=0; s<=annotation_list[0]; s++){
+       document.getElementById("td1_distorsion"+distorsion+"strength"+s.toString()).style = "background-color:#008800";
+       document.getElementById("td2_distorsion"+distorsion+"strength"+s.toString()).style = "background-color:#008800";
+    };
+}
+else{
+    // uncolor all following
+     for (var s=0; s<=strengths; s++){
+       document.getElementById("td1_distorsion"+distorsion+"strength"+s.toString()).style = "background-color:#000000";
+       document.getElementById("td2_distorsion"+distorsion+"strength"+s.toString()).style = "background-color:#000000";
+    };
+};
+
+if (annotation_list.length >= 2){
+   
+    // color light green
+     for (var s=annotation_list[0]+1; s<=annotation_list[1]; s++){
+       document.getElementById("td1_distorsion"+distorsion+"strength"+s.toString()).style = "background-color:#00ff00";
+       document.getElementById("td2_distorsion"+distorsion+"strength"+s.toString()).style = "background-color:#00ff00";
+    };
+}
+else{
+    // uncolor all following
+     for (var s=annotation_list[0]+1; s<=strengths; s++){
+       document.getElementById("td1_distorsion"+distorsion+"strength"+s.toString()).style = "background-color:#000000";
+       document.getElementById("td2_distorsion"+distorsion+"strength"+s.toString()).style = "background-color:#000000";
+
+      };
+};
+
+if (annotation_list.length >= 3){
+    
+    // color yellow
+     for (var s=annotation_list[1]+1; s<=annotation_list[2]; s++){
+       document.getElementById("td1_distorsion"+distorsion+"strength"+s.toString()).style = "background-color:#ffff00";
+       document.getElementById("td2_distorsion"+distorsion+"strength"+s.toString()).style = "background-color:#ffff00";
+    };
+
+    // color red
+    for (var s=annotation_list[2]+1; s<=strengths; s++){
+       document.getElementById("td1_distorsion"+distorsion+"strength"+s.toString()).style = "background-color:#ff0000";
+       document.getElementById("td2_distorsion"+distorsion+"strength"+s.toString()).style = "background-color:#ff0000";
+    };
+    
+    // disable all unchecked checkboxes:
+     for (var s = 0; s <= strengths; s++){
+        if (document.getElementById("distorsion"+distorsion+"strength"+s.toString()).checked == false) {
+            document.getElementById("distorsion"+distorsion+"strength"+s.toString()).disabled = true;
+        };
+     };
+     //document.getElementById("taskmodify").innerHMTL = "Please uncheck a checkbox to modify annotation";
+
+    // enable finished button
+    document.getElementById("finished").disabled = false;
+   
+    
+}
+else{
+
+     // uncolor all following
+     for (var s=annotation_list[1]+1; s<=strengths; s++){
+       document.getElementById("td1_distorsion"+distorsion+"strength"+s.toString()).style = "background-color:#000000";
+       document.getElementById("td2_distorsion"+distorsion+"strength"+s.toString()).style = "background-color:#000000";
+    };
+
+    // enable checkboxes again
+     for (var s = 0; s <= strengths; s++){
+        if (document.getElementById("distorsion"+distorsion+"strength"+s.toString()).checked == false) {
+            document.getElementById("distorsion"+distorsion+"strength"+s.toString()).disabled = false;
+        };
+     };
+
+     };
+
+   var annotation_list = new Array(distorsions.length);
+   var missing = new Array();
+   for (var d = 0; d < distorsions.length; d++){
+      annotation_list[d] = new Array();
+      // including "not perfect" selection with s=0
+      for (var s = 0; s <= strengths; s++){
+         if (document.getElementById("distorsion"+distorsions[d]+"strength"+s.toString()).checked) {
+            annotation_list[d].push(s);
+         }
+      };
+      if (annotation_list[d].length < 3){
+         missing.push(d)
+      }
+   }
+
+   if (missing.length > 0) {  
+      // disable Save button
+      document.getElementById("finished").disabled = true;
+      document.getElementById("info_finished").innerHTML = "Annotations not complete for columns " + missing.toString();
+   }
+   else{
+      // enable Save button
+      document.getElementById("finished").disabled = false;
+      document.getElementById("info_finished").innerHTML = "";
+   
+
+   }
+
+
+}
+
+</script>
+
+<title id="header_title"></title>
+<script>
+
+   if (GetURLParameter("test") == "none"){
+      document.getElementById("header_title").innerHTML = "Case " + cases[GetURLParameter("case")];
+   }
+   else{
+      document.getElementById("header_title").innerHTML = "Test Case " + test_cases[GetURLParameter("case")];
+   }
+</script>
+</head>
+
+<body style="background-color:#000000; color:#ffffff; height:100%; overflow-y:auto;">
+
+<div id="top">
+      <div id="task1" style="color:#ffffff;background-color:#008800;">
+            "Perfect": Image looks like the reference</div>
+      <div id="task2" style="color:#000000;background-color:#00ff00">
+            "Good": No expected impact on diagnosis</div>
+      <div id="task3" style="color:#000000;background-color:#ffff00">
+            "Borderline": Distorsion impacts sensitive or challenging diagnoses</div>
+      <div id="task" style="color:#ffffff;background-color:#ff0000">
+            "Bad": Images not usable for diagnosis</div>
+
+   <table>
+   <tr>
+   
+    
+    <script>
+      var case_nr = parseInt(GetURLParameter("case"));
+      for (var d=0;d<distorsions.length;d++){
+         distorsion = distorsions[d];
+ 	 if(GetURLParameter("test") == "none"){
+         	document.write("<td style=text-align:center><img src=distorted_images/"+cases[case_nr]+"/reference/"+cases[case_nr]+".png> </img><br> Reference Image </td>" +
+         " <td> <input type=checkbox style=visibility:hidden></td>");
+	}
+	else{
+	      document.write("<td style=text-align:center><img src=distorted_images/"+test_cases[case_nr]+"/reference/"+test_cases[case_nr]+".png> </img> <br> Reference Image </td>" +
+         " <td> <input type=checkbox style=visibility:hidden></td>");
+	}
+	
+      }
+     </script>
+     </tr>
+  </table>
+
+
+</div>
+
+
+<div id="images" >
+  <table>
+        
+    <script>
+      var case_nr = parseInt(GetURLParameter("case"));
+      document.write("<tr>");
+      for (var d=0;d<distorsions.length;d++){
+         distorsion = distorsions[d];
+         document.write("<td id=td1_distorsion"+distorsion+"strength0 style='text-align:right;'>  No perfect image </td>"+
+                       " <td id=td2_distorsion"+distorsion+"strength0 ><input type=checkbox id=distorsion"+distorsion+"strength0"+
+            " onchange=update('"+distorsion+"')> </td>");
+      }
+      document.write("</tr>");
+      for(var s=1;s<=strengths;s++){
+
+         document.write("<tr>");
+         
+        
+         if (GetURLParameter("test") == "none"){
+            for (var d=0;d<distorsions.length;d++){
+               distorsion = distorsions[d];
+               document.write(
+                     "<td id=td1_distorsion"+distorsion+"strength"+s.toString()+"><img src=distorted_images/"+cases[case_nr]+"/"+distorsion+"/"+cases[case_nr]+"_"+distorsion+"_"+s.toString()+".png> </img> </td>" +
+                     "<td id=td2_distorsion"+distorsion+"strength"+s.toString()+"><input type=checkbox id=distorsion"+distorsion+"strength"+s.toString()+" onchange=update('"+distorsion+"')> </td>");
+            }
+
+         }
+         else{
+            for (var d=0;d<distorsions.length;d++){
+               distorsion = distorsions[d];
+               document.write(
+                     "<td id=td1_distorsion"+distorsion+"strength"+s.toString()+"><img src=distorted_images/"+test_cases[case_nr]+"/"+distorsion+"/"+test_cases[case_nr]+"_"+distorsion+"_"+s.toString()+".png> </img> </td>" +
+                     "<td id=td2_distorsion"+distorsion+"strength"+s.toString()+"><input type=checkbox id=distorsion"+distorsion+"strength"+s.toString()+" onchange=update('"+distorsion+"')> </td>");
+            }
+         }
+         document.write("</tr>");
+      }
+   </script>
+      <tr>
+      <script>
+      for (var d=0;d<distorsions.length;d++){
+         distorsion = distorsions[d];
+         document.write("<td colspan='2' style='text-align:center;'> "+
+            "comment: <br> <input id='c_distorsion"+distorsion+"'' type=text> </td>");
+      }
+      document.write("</tr>");
+      </script>
+
+         
+
+
+
+</table>
+
+
+
+</div>
+
+<div id="bottom">
+
+<p id="info_finished"></p>
+<input type="button" id="finished" value="Save + Next Case" onclick="finished_case()" >
+
+<script>
+var case_nr = GetURLParameter("case");
+
+if (GetURLParameter("test") == "none"){
+   if (case_nr + 1 == cases.length) {
+      document.getElementById("finished").value = "Save";
+   }
+}
+else{
+   if (case_nr + 1 == test_cases.length) {
+      document.getElementById("finished").value = "Save";
+   }
+   
+}
+
+
+</script>
+<a href="index.html" style="background-color: #646464;"> Back to main page </a>
+</div>
+
+<script>
+// load annotations from localStorage:
+var stored_annotations = localStorage.getItem("annotations");
+var case_nr = parseInt(GetURLParameter("case"));
+if ( stored_annotations != null){
+    var annotation_lines = stored_annotations.split("\n");
+
+    /* annotation format:
+    reader,distorsion,case, 0, 1, 2,comment
+    */
+
+
+   for (d=0;d<distorsions.length;d++){
+       for (var l=0;l<annotation_lines.length;l++){
+           var columns = annotation_lines[l].split(",");
+        	
+           if (columns.length == 7 && columns[2] == cases[case_nr] && columns[1] == distorsions[d]){
+           	document.getElementById("distorsion"+distorsions[d]+"strength"+columns[3].toString()).checked = true;
+		document.getElementById("distorsion"+distorsions[d]+"strength"+columns[4].toString()).checked = true;
+                document.getElementById("distorsion"+distorsions[d]+"strength"+columns[5].toString()).checked = true;
+		document.getElementById("c_distorsion"+distorsions[d]).value = columns[6];
+	        console.log("checking box with id: '"+"distorsion"+distorsions[d]+"strength"+columns[3].toString()+"'");
+            }
+            
+       }
+       console.log("updating....");
+       update(distorsions[d]);      
+    }
+
+}
+
+</script>
+
+</body>
+</html>

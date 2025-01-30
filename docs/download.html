@@ -1,0 +1,53 @@
+<html>
+<header>
+
+
+</header>
+<body>
+
+    <script>
+
+    stored_annotations = localStorage.getItem("annotations");
+
+    if (stored_annotations != null){
+        var annotation_lines = stored_annotations.split("\n");
+
+        columns = annotation_lines[0].split(",");
+        reader_name = columns[0];
+
+        // save annotations in a file:
+        var data = stored_annotations;
+
+        // Convert the text to BLOB.
+        const textToBLOB = new Blob([data], { type: "text/plain" });
+
+        let newLink = document.createElement("a");
+        newLink.download = reader_name + "_annotations.txt";
+
+        if (window.webkitURL != null) {
+        newLink.href = window.webkitURL.createObjectURL(textToBLOB);
+        } else {
+            newLink.href = window.URL.createObjectURL(textToBLOB);
+            newLink.style.display = "none";
+            document.body.appendChild(newLink);
+        }
+
+        newLink.click();
+        console.log("annotations: \n" + localStorage.getItem("annotations"));
+        console.log("reader_name in Storage: \n" + localStorage.getItem("reader_name"));
+        console.log("reader_name annotations: \n" + reader_name);
+
+        if (localStorage.getItem("reader_name") != null){
+            if (reader_name != localStorage.getItem("reader_name")){
+                localStorage.removeItem("annotations");
+            }
+        }
+        console.log("annotations: \n" + localStorage.getItem("annotations"));
+    }
+    </script>
+
+</body>
+
+
+
+</html>

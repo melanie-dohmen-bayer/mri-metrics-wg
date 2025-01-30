@@ -1,0 +1,63 @@
+<html>
+<header>
+
+</header>
+<body>
+
+<h1> Introduction </h1>
+
+<p>
+    The aim of this study is to quantify the quality of certain distorted medical images.
+    In order to find reasonable parameters for distorsions, we ask the readers to categorize the 
+    presented distorted images into the following quality levels:
+
+</p>
+<ul>
+   <li> <div style="color:#ffffff;background-color:#008800;">"Perfect": No visible difference to the reference image</div></li><br>
+   <li style="background-color:#00ff00;">"Good": Visible difference to the reference image, but good quality, no effect on diagnosis expected.</li><br>
+   <li style="background-color:#ffff00;">"Borderline": Quality is not good, but image could still be used for "easy" diagnosis tasks.</li><br>
+   <li style="color:#ffffff;background-color:#ff0000;">"Bad": Very Poor quality, image should be rejected for any task.</li><br>
+
+</ul>
+
+<p>
+For each case, you will find a different distorsion in each column, and increasing distorsion strengths in each row.
+In the top row, you will find the weakest distorsion, in the bottom row the strongest distorsion.
+</p>
+
+<p>
+    Please select 3 checkboxes in each column (for each distortion type), corresponding to the lowest image you would categorize
+    in levels "Perfect", "Good" and "Borderline" respectively. All lower images will be assigned to level "Bad".
+</p>
+<p>
+    If the first (most upper) image is already different from the reference image, please check at "No perfect image"
+</p>
+
+<p>
+    When a sufficient number of boxes has been checked, all distorted images should be framed by their category color,
+    and the button "Next Case" will appear below.
+    By clicking on the button, a download will be triggered with your "annotations.csv" file.
+    After each case, this can be overwritten, because it includes all previous cases of your session and uploaded annotations.
+</p>
+
+<p>
+    If you start a new session, you should upload your annotation file first and then continue your annotations.
+</p>
+
+<p>
+Please try the to train the annotation process and 
+to get familiar with the variety of distortions:
+</p>
+<a href="annotate.html?test=T&case=0"> Go to the test cases </a>
+
+<br>
+<br>
+
+<a href="index.html"> Go back to main page</a>
+
+
+</body>
+
+
+
+</html>
